@@ -18,4 +18,5 @@ clean:
 	find tests/ -type f -name 'simple-project' -delete 
 	find tests/ -type f -name '*_profile_listen_addr' -delete 
 	find tests/ -type f -name 'simple_gopath_project' -delete 
-	
+build:
+	CGO_ENABLED=0 go build -ldflags "-X 'github.com/qiniu/goc/cmd.version=dev'" .

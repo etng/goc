@@ -34,7 +34,7 @@ func (b *Build) Run() error {
 		cmd.Env = append(os.Environ(), fmt.Sprintf("GOPATH=%v", b.NewGOPATH))
 	}
 
-	log.Infof("go build cmd is: %v", cmd.Args)
+	log.Infof("go run cmd is: %v", cmd.Args)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Start()
@@ -45,6 +45,6 @@ func (b *Build) Run() error {
 	if err = cmd.Wait(); err != nil {
 		return fmt.Errorf("fail to execute: %v, err: %w", cmd.Args, err)
 	}
-
+	log.Infof("run done")
 	return nil
 }

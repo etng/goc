@@ -17,10 +17,13 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/qiniu/goc/pkg/build"
 	"github.com/qiniu/goc/pkg/cover"
@@ -52,11 +55,10 @@ goc run . [--buildflags] [--exec] [--arguments]
 		defer gocBuild.Clean()
 
 		server := cover.NewMemoryBasedServer() // only save services in memory
-
 		// start goc server
 		var l = newLocalListener(agentPort.String())
 		go func() {
-			err = server.Route(ioutil.Discard).RunListener(l)
+			err = server.Route(os.Stdout).RunListener(l)
 			if err != nil {
 				log.Fatalf("Start goc server failed: %v", err)
 			}
@@ -86,10 +88,34 @@ goc run . [--buildflags] [--exec] [--arguments]
 		if err != nil {
 			log.Fatalf("Fail to run: %v", err)
 		}
+		addr := fmt.Sprintf("%s/v1/cover/profile", gocServer)
+		go func() {
+			ticker := time.NewTicker(time.Second)
+			i := 0
+			for range ticker.C {
+				log.Infof("get profile from addr %s", addr)
+				if resp, err := http.Get(addr); err != nil {
+					log.Errorf("fail to get from %s for %s", addr, err)
+				} else {
+					body, _ := ioutil.ReadAll(resp.Body)
+					resp.Body.Close()
+					var profile map[string]string
+					if err := json.Unmarshal(body, &profile); err == nil {
+						fmt.Println(profile["error"], err)
+					} else {
+						//ioutil.WriteFile(fmt.Sprintf("profile%d.data", i), body, os.ModePerm)
+						ioutil.WriteFile("profile.data", body, os.ModePerm)
+						fmt.Println("version", i)
+						i += 1
+					}
 
+				}
+			}
+		}()
 		if err := gocBuild.Run(); err != nil {
 			log.Fatalf("Fail to run: %v", err)
 		}
+
 	},
 }
 

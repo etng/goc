@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -37,6 +38,11 @@ Find more information at:
  https://github.com/qiniu/goc
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logFile, err := os.OpenFile("goc.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
+		if err != nil {
+			fmt.Println("can not open log for goc", err)
+		}
+		log.SetOutput(logFile)
 		log.SetReportCaller(true)
 		log.SetLevel(log.InfoLevel)
 		log.SetFormatter(&log.TextFormatter{
